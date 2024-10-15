@@ -1,7 +1,7 @@
 import React from 'react';
 import { HighPriorityIcon, LowPriorityIcon, MediumPriorityIcon, UrgentPriorityIcon, NoPriorityIcon, BacklogIcon, InProgressIcon, TodoIcon, DoneIcon, CancelledIcon } from './assets/icons';
 
-const KanbanCard = ({ ticket, user, groupBy }) => {
+const KanbanCard = ({ ticket, user, groupBy, getColorFromName }) => {
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
@@ -28,12 +28,7 @@ const KanbanCard = ({ ticket, user, groupBy }) => {
     }
   };
 
-  const getRandomColor = () => {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AED581', '#7986CB', '#4DB6AC', '#9575CD'];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-
-  const userColor = user ? getRandomColor() : '#ccc';
+  const userColor = user ? getColorFromName(user.name) : '#ccc';
 
   return (
     <div className="kanban-card">

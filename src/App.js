@@ -25,6 +25,17 @@ const App = () => {
         setUsers(data.users);
       })
       .catch(err => console.error(err));
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDisplayDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -39,58 +50,26 @@ const App = () => {
     localStorage.setItem("sortBy", sortBy);
   }, [groupBy, sortBy]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDisplayDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const groupTickets = () => {
-    let groups = {};
     if (groupBy === "status") {
-      groups = {
-        "Backlog": [],
-        "Todo": [],
-        "In progress": [],
-        "Done": [],
-        "Cancelled": []
-      };
+      const statusOrder = ['Backlog', 'Todo', 'In progress', 'Done', 'Cancelled'];
+      return statusOrder.reduce((acc, status) => {
+        acc[status] = tickets.filter(ticket => ticket.status === status);
+        return acc;
+      }, {});
     } else if (groupBy === "user") {
-      users.forEach(user => {
-        groups[user.name] = [];
-      });
+      return users.reduce((acc, user) => {
+        acc[user.name] = tickets.filter(ticket => ticket.userId === user.id);
+        return acc;
+      }, {});
     } else if (groupBy === "priority") {
-      groups = {
-        "Urgent": [],
-        "High": [],
-        "Medium": [],
-        "Low": [],
-        "No priority": []
-      };
+      const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
+      return priorityLevels.reduce((acc, priority, index) => {
+        acc[priority] = tickets.filter(ticket => ticket.priority === index);
+        return acc;
+      }, {});
     }
-
-    tickets.forEach(ticket => {
-      if (groupBy === "status") {
-        groups[ticket.status].push(ticket);
-      } else if (groupBy === "user") {
-        const user = users.find(u => u.id === ticket.userId);
-        if (user) {
-          groups[user.name].push(ticket);
-        }
-      } else if (groupBy === "priority") {
-        const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
-        groups[priorityLevels[ticket.priority]].push(ticket);
-      }
-    });
-
-    return groups;
+    return {};
   };
 
   const sortedTickets = (ticketsGroup) => {
@@ -120,6 +99,20 @@ const App = () => {
     }
   };
 
+  const getInitials = (name) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getColorFromName = (name) => {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AED581', '#7986CB', '#4DB6AC', '#9575CD'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    hash = Math.abs(hash);
+    return colors[hash % colors.length];
+  };
+
   const groupedTickets = groupTickets();
 
   return (
@@ -139,10 +132,7 @@ const App = () => {
                 <select 
                   id="grouping" 
                   value={groupBy} 
-                  onChange={(e) => {
-                    setGroupBy(e.target.value);
-                    setDisplayDropdownOpen(false);
-                  }}
+                  onChange={(e) => setGroupBy(e.target.value)}
                 >
                   <option value="status">Status</option>
                   <option value="user">User</option>
@@ -154,10 +144,7 @@ const App = () => {
                 <select 
                   id="ordering" 
                   value={sortBy} 
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setDisplayDropdownOpen(false);
-                  }}
+                  onChange={(e) => setSortBy(e.target.value)}
                 >
                   <option value="priority">Priority</option>
                   <option value="title">Title</option>
@@ -171,14 +158,23 @@ const App = () => {
       <div className="kanban-board">
         {Object.entries(groupedTickets).map(([group, tickets]) => (
           <div key={group} className="kanban-column">
-            <h3>
-              {getColumnIcon(group)}
-              <b>{group}</b> {tickets.length}
+            <div className="kanban-column-header">
+              <div className="kanban-column-title">
+                {groupBy === 'user' ? (
+                  <div className="user-avatar" style={{backgroundColor: getColorFromName(group)}}>
+                    {getInitials(group)}
+                  </div>
+                ) : (
+                  getColumnIcon(group)
+                )}
+                <strong>{group}</strong>
+                <span>{tickets.length}</span>
+              </div>
               <div className="column-actions">
                 <AddIcon />
                 <MenuIcon />
               </div>
-            </h3>
+            </div>
             <div className="kanban-cards">
               {sortedTickets(tickets).map(ticket => (
                 <KanbanCard 
@@ -186,6 +182,7 @@ const App = () => {
                   ticket={ticket} 
                   user={users.find(user => user.id === ticket.userId)}
                   groupBy={groupBy}
+                  getColorFromName={getColorFromName}
                 />
               ))}
             </div>
