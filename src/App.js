@@ -17,7 +17,7 @@ const App = () => {
       .then(data => {
         const updatedTickets = data.tickets.map(ticket => ({
           ...ticket,
-          status: ['Backlog', 'Todo', 'In Progress', 'Done', 'Cancelled'].includes(ticket.status) 
+          status: ['Backlog', 'Todo', 'In progress', 'Done', 'Cancelled'].includes(ticket.status) 
             ? ticket.status 
             : 'Todo'
         }));
@@ -58,7 +58,7 @@ const App = () => {
       groups = {
         "Backlog": [],
         "Todo": [],
-        "In Progress": [],
+        "In progress": [],
         "Done": [],
         "Cancelled": []
       };
