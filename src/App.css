@@ -1,38 +1,85 @@
-.App {
+/* General styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.app {
+  padding: 20px;
+}
+
+/* Controls Section */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.controls label {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.controls select {
+  padding: 5px;
+  font-size: 1rem;
+}
+
+/* Kanban Board Layout */
+.kanban-board {
+  display: flex;
+  gap: 20px;
+  justify-content: space-around;
+}
+
+/* Kanban Column */
+.kanban-column {
+  flex: 1;
+  background-color: #e1e1e1;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.kanban-column h3 {
   text-align: center;
+  margin-bottom: 15px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Kanban Cards */
+.kanban-cards {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 15px;
 }
 
-.App-link {
-  color: #61dafb;
+.kanban-card {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.kanban-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+}
+
+.kanban-card p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .kanban-column {
+    margin-bottom: 20px;
   }
 }
