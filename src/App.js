@@ -63,7 +63,7 @@ const App = () => {
         return acc;
       }, {});
     } else if (groupBy === "priority") {
-      const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
+      const priorityLevels = ["No priority", "Urgent", "High", "Medium", "Low"];
       return priorityLevels.reduce((acc, priority, index) => {
         acc[priority] = tickets.filter(ticket => ticket.priority === index);
         return acc;
