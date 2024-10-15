@@ -10,18 +10,23 @@ const App = () => {
   const [sortBy, setSortBy] = useState("priority");
   const [displayDropdownOpen, setDisplayDropdownOpen] = useState(false);
 
-  // Fetch data from the API on mount
   useEffect(() => {
     fetch("https://api.quicksell.co/v1/internal/frontend-assignment")
       .then(response => response.json())
       .then(data => {
-        setTickets(data.tickets);
+        // Add 'Done' and 'Cancelled' status if not present
+        const updatedTickets = data.tickets.map(ticket => ({
+          ...ticket,
+          status: ['Backlog', 'Todo', 'In Progress', 'Done', 'Cancelled'].includes(ticket.status) 
+            ? ticket.status 
+            : 'Todo'
+        }));
+        setTickets(updatedTickets);
         setUsers(data.users);
       })
       .catch(err => console.error(err));
   }, []);
 
-  // Load previous view state from localStorage
   useEffect(() => {
     const savedGroupBy = localStorage.getItem("groupBy");
     const savedSortBy = localStorage.getItem("sortBy");
@@ -29,13 +34,11 @@ const App = () => {
     if (savedSortBy) setSortBy(savedSortBy);
   }, []);
 
-  // Save current view state to localStorage
   useEffect(() => {
     localStorage.setItem("groupBy", groupBy);
     localStorage.setItem("sortBy", sortBy);
   }, [groupBy, sortBy]);
 
-  // Group tickets based on user's selection
   const groupTickets = () => {
     if (groupBy === "status") {
       return tickets.reduce((acc, ticket) => {
@@ -49,8 +52,8 @@ const App = () => {
         return acc;
       }, {});
     } else if (groupBy === "priority") {
+      const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
       return tickets.reduce((acc, ticket) => {
-        const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
         const priority = priorityLevels[ticket.priority];
         if (!acc[priority]) acc[priority] = [];
         acc[priority].push(ticket);
@@ -60,7 +63,6 @@ const App = () => {
     return {};
   };
 
-  // Sort tickets based on user's selection
   const sortedTickets = (ticketsGroup) => {
     return ticketsGroup.sort((a, b) => {
       if (sortBy === "priority") {
@@ -142,6 +144,7 @@ const App = () => {
                   key={ticket.id} 
                   ticket={ticket} 
                   user={users.find(user => user.id === ticket.userId)}
+                  groupBy={groupBy}
                 />
               ))}
             </div>
