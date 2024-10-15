@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import KanbanCard from "./KanbanCard";
 import './App.css';
-import { DisplayIcon, AddIcon, MenuIcon, BacklogIcon, InProgressIcon, TodoIcon, DoneIcon, CancelledIcon } from './assets/icons';
+import { DisplayIcon, AddIcon, MenuIcon, BacklogIcon, InProgressIcon, TodoIcon, DoneIcon, CancelledIcon, HighPriorityIcon, MediumPriorityIcon, LowPriorityIcon, NoPriorityIcon, UrgentPriorityIcon } from './assets/icons';
 
 const App = () => {
   const [tickets, setTickets] = useState([]);
@@ -9,12 +9,12 @@ const App = () => {
   const [groupBy, setGroupBy] = useState("status");
   const [sortBy, setSortBy] = useState("priority");
   const [displayDropdownOpen, setDisplayDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetch("https://api.quicksell.co/v1/internal/frontend-assignment")
       .then(response => response.json())
       .then(data => {
-        // Add 'Done' and 'Cancelled' status if not present
         const updatedTickets = data.tickets.map(ticket => ({
           ...ticket,
           status: ['Backlog', 'Todo', 'In Progress', 'Done', 'Cancelled'].includes(ticket.status) 
@@ -39,28 +39,58 @@ const App = () => {
     localStorage.setItem("sortBy", sortBy);
   }, [groupBy, sortBy]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDisplayDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const groupTickets = () => {
+    let groups = {};
     if (groupBy === "status") {
-      return tickets.reduce((acc, ticket) => {
-        if (!acc[ticket.status]) acc[ticket.status] = [];
-        acc[ticket.status].push(ticket);
-        return acc;
-      }, {});
+      groups = {
+        "Backlog": [],
+        "Todo": [],
+        "In Progress": [],
+        "Done": [],
+        "Cancelled": []
+      };
     } else if (groupBy === "user") {
-      return users.reduce((acc, user) => {
-        acc[user.name] = tickets.filter(ticket => ticket.userId === user.id);
-        return acc;
-      }, {});
+      users.forEach(user => {
+        groups[user.name] = [];
+      });
     } else if (groupBy === "priority") {
-      const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
-      return tickets.reduce((acc, ticket) => {
-        const priority = priorityLevels[ticket.priority];
-        if (!acc[priority]) acc[priority] = [];
-        acc[priority].push(ticket);
-        return acc;
-      }, {});
+      groups = {
+        "Urgent": [],
+        "High": [],
+        "Medium": [],
+        "Low": [],
+        "No priority": []
+      };
     }
-    return {};
+
+    tickets.forEach(ticket => {
+      if (groupBy === "status") {
+        groups[ticket.status].push(ticket);
+      } else if (groupBy === "user") {
+        const user = users.find(u => u.id === ticket.userId);
+        if (user) {
+          groups[user.name].push(ticket);
+        }
+      } else if (groupBy === "priority") {
+        const priorityLevels = ["No priority", "Low", "Medium", "High", "Urgent"];
+        groups[priorityLevels[ticket.priority]].push(ticket);
+      }
+    });
+
+    return groups;
   };
 
   const sortedTickets = (ticketsGroup) => {
@@ -74,13 +104,18 @@ const App = () => {
     });
   };
 
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
+  const getColumnIcon = (group) => {
+    switch (group.toLowerCase()) {
       case 'backlog': return <BacklogIcon />;
       case 'in progress': return <InProgressIcon />;
       case 'todo': return <TodoIcon />;
       case 'done': return <DoneIcon />;
       case 'cancelled': return <CancelledIcon />;
+      case 'no priority': return <NoPriorityIcon />;
+      case 'low': return <LowPriorityIcon />;
+      case 'medium': return <MediumPriorityIcon />;
+      case 'high': return <HighPriorityIcon />;
+      case 'urgent': return <UrgentPriorityIcon />;
       default: return null;
     }
   };
@@ -90,7 +125,7 @@ const App = () => {
   return (
     <div className="app">
       <div className="controls">
-        <div className="display-dropdown">
+        <div className="display-dropdown" ref={dropdownRef}>
           <button 
             className="display-dropdown-button" 
             onClick={() => setDisplayDropdownOpen(!displayDropdownOpen)}
@@ -104,7 +139,10 @@ const App = () => {
                 <select 
                   id="grouping" 
                   value={groupBy} 
-                  onChange={(e) => setGroupBy(e.target.value)}
+                  onChange={(e) => {
+                    setGroupBy(e.target.value);
+                    setDisplayDropdownOpen(false);
+                  }}
                 >
                   <option value="status">Status</option>
                   <option value="user">User</option>
@@ -116,7 +154,10 @@ const App = () => {
                 <select 
                   id="ordering" 
                   value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setDisplayDropdownOpen(false);
+                  }}
                 >
                   <option value="priority">Priority</option>
                   <option value="title">Title</option>
@@ -131,8 +172,8 @@ const App = () => {
         {Object.entries(groupedTickets).map(([group, tickets]) => (
           <div key={group} className="kanban-column">
             <h3>
-              {getStatusIcon(group)}
-              {group} {tickets.length}
+              {getColumnIcon(group)}
+              <b>{group}</b> {tickets.length}
               <div className="column-actions">
                 <AddIcon />
                 <MenuIcon />
