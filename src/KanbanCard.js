@@ -40,10 +40,12 @@ const KanbanCard = ({ ticket, user, groupBy, getColorFromName }) => {
           </div>
         )}
       </div>
-      <h4 className="kanban-card-title">{ticket.title}</h4>
+      <div className="kanban-card-title-row">
+        {groupBy !== 'status' && <div className="kanban-card-status-icon">{getStatusIcon(ticket.status)}</div>}
+        <h4 className="kanban-card-title">{ticket.title}</h4>
+      </div>
       <div className="kanban-card-footer">
         {groupBy !== 'priority' && getPriorityIcon(ticket.priority)}
-        {groupBy !== 'status' && getStatusIcon(ticket.status)}
         <span className="kanban-card-tag">
           Feature Request
         </span>

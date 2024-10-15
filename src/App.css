@@ -188,11 +188,30 @@ body {
   font-weight: 500;
 }
 
+/* New styles for the updated card layout */
+.kanban-card-title-row {
+  display: flex;
+  align-items: start;
+  gap: 6px;
+  margin: 4px 0 8px 0;
+}
+
+.kanban-card-status-icon {
+  display: flex;
+  align-items: center;
+}
+
+.kanban-card-status-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .kanban-card-title {
   font-size: 14px;
   font-weight: 500;
   color: #373737;
-  margin: 4px 0 8px 0;
+  margin: 0;
+  flex-grow: 1;
 }
 
 .kanban-card-footer {
